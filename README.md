@@ -1,1 +1,66 @@
-# abdi
+Travelport 
+Travelport is a gem that wraps the Travelport API so that you can hook into availability and booking without having to deal with the nitty-gritty of the API.
+
+Installation
+Add this line to your application's Gemfile:
+
+gem 'travelport'
+And then execute:
+
+$ bundle
+Or install it yourself as:
+
+$ gem install travelport
+The Travelport Cookbook
+How do I configure Travelport?
+By default, travelport loads with a configuration pointing to the test Americas environment.
+
+To configure production settings, use the setup block:
+
+Travelport.setup do |config|
+  config.env = :production_americas          # or :production_emea or :production_apac
+  config.username = 'my_username'
+  config.password = 'my_pasword'
+  config.target_branch = 'my_branch_id'
+  config.point_of_sale = 'my_pos_id'         # by defualt this will be 'uAPI'
+end
+How do I query hotel availability?
+The Travelport::Model::HotelProperty class provides a somewhat sane interface for discovering hotels.
+
+response = Travelport::Model::HotelProperty.search_availability('NYC', { checkin:Time.new + 5.days, checkout:Time.new+10.days, adults:1, rooms:1})
+# response is an array of Travelport::Model::HotelProperty
+
+response.each do |property|
+  rates = property.rates({ checkin:Time.new + 5.days, checkout:Time.new+10.days, adults:1})
+  # rates is an array of Travelport::Model::HotelRate
+end
+How do I make a direct API call to the AirService?
+The Travelport::Bridge::Air provides direct access to core API methods. e.g.
+
+bridge = Travelport::Bridge::Air.new
+response = bridge.low_fare_search([{from:'IEV', to:'NYC', at:Time.new + 5.days }, {from:'NYC', to:'IEV', at:Time.new+10.days}], {adults:1, cabin:'Economy'})
+response.is_a?(Travelport::Response::LowFareSearchRsp)
+How do I make a direct API call to the HotelService?
+The Travelport::Bridge::Hotel provides direct access to core API methods. e.g.
+
+bridge = Travelport::Bridge::Hotel.new
+
+response = bridge.search_availability('NYC', { checkin:Time.new + 5.days, checkout:Time.new+10.days, adults:1, rooms:1})
+response.is_a?(Travelport::Response::HotelSearchAvailabilityRsp)
+
+response = bridge.hotel_details('CP', '02743', { checkin:Time.new + 5.days, checkout:Time.new+10.days})
+response.is_a?(Travelport::Response::HotelDetailsRsp)
+Contributing
+Fork it
+
+Create your feature branch (`git checkout -b my-new-feature`)
+
+Commit your changes (`git commit -am 'Add some feature'`)
+
+Make sure to add tests for it. This is important so I don't break it in a future version unintentionally.
+
+Please try not to mess with the Rakefile, version, or history. If you want to have your own version, or is otherwise necessary, that is fine, but please isolate to its own commit so I can cherry-pick around it.
+
+Push to the branch (`git push origin my-new-feature`)
+
+Create new Pull Request
